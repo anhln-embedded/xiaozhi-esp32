@@ -55,6 +55,35 @@ void InitializeTools() {
         SetLedColor(r, g, b);
         return true;
     });
+    // 例3：控制LED状态 (lichuang-dev-custom示例)
+    mcp_server.AddTool("self.led.set_state", "控制LED状态，使用bit 0-7选择LED，level 0=关，1=开", PropertyList({
+        Property("bit", kPropertyTypeInteger, 0, 7),
+        Property("level", kPropertyTypeInteger, 0, 1)
+    }), [this](const PropertyList& properties) -> ReturnValue {
+        int bit = properties["bit"].value<int>();
+        int level = properties["level"].value<int>();
+        pca9557_->SetOutputState(bit, level);
+        return true;
+    });
+    // 例4：读取GPIO状态 (lichuang-dev-custom示例)
+    mcp_server.AddTool("self.gpio.read_state", "读取PCA9557 I/O扩展器的GPIO状态", PropertyList(), [this](const PropertyList&) -> ReturnValue {
+        uint8_t input_state = pca9557_->GetInputState();
+        uint8_t output_state = pca9557_->GetOutputState();
+        return std::string("{\"input_state\": ") + std::to_string(input_state) + ", \"output_state\": " + std::to_string(output_state) + "}";
+    });
+    // 例5：Publish MQTT消息 (lichuang-dev-custom示例)
+    mcp_server.AddTool("self.mqtt.publish", "发布MQTT消息到指定服务器", PropertyList({
+        Property("server", kPropertyTypeString),
+        Property("topic", kPropertyTypeString),
+        Property("message", kPropertyTypeString),
+        Property("port", kPropertyTypeInteger, 1883, 65535)
+    }), [this](const PropertyList& properties) -> ReturnValue {
+        std::string server = properties["server"].value<std::string>();
+        std::string topic = properties["topic"].value<std::string>();
+        std::string message = properties["message"].value<std::string>();
+        int port = properties["port"].value<int>();
+        return PublishMqttMessage(server, port, topic, message);
+    });
 }
 ```
 
@@ -109,7 +138,54 @@ void InitializeTools() {
 }
 ```
 
+### 5. 控制LED状态 (lichuang-dev-custom)
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "self.led.set_state",
+    "arguments": {
+      "bit": 0,
+      "level": 1
+    }
+  },
+  "id": 5
+}
+```
+
+### 6. 读取GPIO状态 (lichuang-dev-custom)
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "self.gpio.read_state",
+    "arguments": {}
+  },
+  "id": 6
+}
+```
+
+### 7. Publish MQTT消息 (lichuang-dev-custom)
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "self.mqtt.publish",
+    "arguments": {
+      "server": "192.168.1.100",
+      "topic": "home/device/control",
+      "message": "turn_on_light",
+      "port": 1883
+    }
+  },
+  "id": 7
+}
+```
+
 ## 备注
 - 工具名称、参数及返回值请以设备端 `AddTool` 注册为准。
 - 推荐所有新项目统一采用 MCP 协议进行物联网控制。
-- 详细协议与进阶用法请查阅 [`mcp-protocol.md`](./mcp-protocol.md)。 
+- 详细协议与进阶用法请查阅 [`mcp-protocol.md`](./mcp-protocol.md)。
