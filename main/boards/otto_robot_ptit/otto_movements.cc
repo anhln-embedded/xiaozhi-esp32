@@ -603,13 +603,16 @@ void Otto::HandsUp(int period, int dir) {
     int target[SERVO_COUNT] = {90, 90, 90, 90, HAND_HOME_POSITION, 180 - HAND_HOME_POSITION};
 
     if (dir == 0) {
-        target[LEFT_HAND] = 170;
-        target[RIGHT_HAND] = 10;
+        // Giơ cả hai tay cao hơn - dùng góc thấp hơn để giơ cao hơn
+        target[LEFT_HAND] = 0;
+        target[RIGHT_HAND] = 180;
     } else if (dir == 1) {
-        target[LEFT_HAND] = 170;
+        // Giơ tay trái cao
+        target[LEFT_HAND] = 0;
         target[RIGHT_HAND] = servo_[RIGHT_HAND].GetPosition();
     } else if (dir == -1) {
-        target[RIGHT_HAND] = 10;
+        // Giơ tay phải cao
+        target[RIGHT_HAND] = 180;
         target[LEFT_HAND] = servo_[LEFT_HAND].GetPosition();
     }
 

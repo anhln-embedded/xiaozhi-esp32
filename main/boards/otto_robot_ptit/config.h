@@ -47,6 +47,10 @@
 
 #define BOOT_BUTTON_GPIO GPIO_NUM_0
 
+// Custom MAC address for the device (format: 0xXX, 0xXX, 0xXX, 0xXX, 0xXX, 0xXX)
+// Uncomment and modify the line below to set a custom MAC address
+#define CUSTOM_MAC_ADDRESS {0x02, 0x1A, 0x3B, 0x4C, 0x5D, 0x6E}
+
 #define OTTO_ROBOT_VERSION "1.4.5"
 
 #endif  // _BOARD_CONFIG_H_

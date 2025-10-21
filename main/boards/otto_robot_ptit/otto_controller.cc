@@ -60,7 +60,7 @@ private:
 
         while (true) {
             if (xQueueReceive(controller->action_queue_, &params, pdMS_TO_TICKS(1000)) == pdTRUE) {
-                ESP_LOGI(TAG, "Execute action: %d", params.action_type);
+                ESP_LOGI(TAG, "Thực hiện hành động: %d", params.action_type);
                 controller->is_action_in_progress_ = true;
 
                 switch (params.action_type) {
@@ -146,11 +146,11 @@ private:
     void QueueAction(int action_type, int steps, int speed, int direction, int amount) {
         // 检查手部动作
         if ((action_type >= ACTION_HANDS_UP && action_type <= ACTION_HAND_WAVE) && !has_hands_) {
-            ESP_LOGW(TAG, "尝试执行手部动作，但机器人没有配置手部舵机");
+            ESP_LOGW(TAG, "Thử thực hiện hành động tay nhưng robot không có servo tay");
             return;
         }
 
-        ESP_LOGI(TAG, "Action control: type=%d, steps=%d, speed=%d, direction=%d, amount=%d", action_type, steps,
+        ESP_LOGI(TAG, "Điều khiển hành động: type=%d, steps=%d, speed=%d, direction=%d, amount=%d", action_type, steps,
                  speed, direction, amount);
 
         OttoActionParams params = {action_type, steps, speed, direction, amount};
@@ -168,7 +168,7 @@ private:
         int left_hand = settings.GetInt("left_hand", 0);
         int right_hand = settings.GetInt("right_hand", 0);
 
-        ESP_LOGI(TAG, "Load trim settings from NVS: left_leg=%d, right_leg=%d, left_foot=%d, right_foot=%d, left_hand=%d, right_hand=%d",
+        ESP_LOGI(TAG, "Tải cài đặt tinh chỉnh từ NVS: left_leg=%d, right_leg=%d, left_foot=%d, right_foot=%d, left_hand=%d, right_hand=%d",
                  left_leg, right_leg, left_foot, right_foot, left_hand, right_hand);
 
         otto_.SetTrims(left_leg, right_leg, left_foot, right_foot, left_hand, right_hand);
@@ -180,7 +180,7 @@ public:
                    RIGHT_HAND_PIN);
 
         has_hands_ = (LEFT_HAND_PIN != -1 && RIGHT_HAND_PIN != -1);
-        ESP_LOGI(TAG, "Otto robot initialized %s hand servos", has_hands_ ? "with" : "without");
+        ESP_LOGI(TAG, "Khởi tạo robot Otto %s servo tay", has_hands_ ? "với" : "không có");
 
         LoadTrimsFromNVS();
 
@@ -194,12 +194,12 @@ public:
     void RegisterMcpTools() {
         auto& mcp_server = McpServer::GetInstance();
 
-        ESP_LOGI(TAG, "Start registering MCP tools...");
+        ESP_LOGI(TAG, "Bắt đầu đăng ký công cụ MCP...");
 
         // 基础移动动作
         mcp_server.AddTool("self.otto.walk_forward",
-                           "行走。steps: 行走步数(1-100); speed: 行走速度(500-1500，数值越小越快); "
-                           "direction: 行走方向(-1=后退, 1=前进); arm_swing: 手臂摆动幅度(0-170度)",
+                           "Đi bộ. steps: Số bước đi (1-100); speed: Tốc độ đi bộ (500-1500, số nhỏ hơn chạy nhanh hơn); "
+                           "direction: Hướng đi (-1=lùi, 1=tiến); arm_swing: Biên độ vung tay (0-170 độ)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 3, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("arm_swing", kPropertyTypeInteger, 50, 0, 170),
@@ -214,8 +214,8 @@ public:
                            });
 
         mcp_server.AddTool("self.otto.turn_left",
-                           "转身。steps: 转身步数(1-100); speed: 转身速度(500-1500，数值越小越快); "
-                           "direction: 转身方向(1=左转, -1=右转); arm_swing: 手臂摆动幅度(0-170度)",
+                           "Quay người. steps: Số bước quay (1-100); speed: Tốc độ quay (500-1500, số nhỏ hơn chạy nhanh hơn); "
+                           "direction: Hướng quay (1=quay trái, -1=quay phải); arm_swing: Biên độ vung tay (0-170 độ)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 3, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("arm_swing", kPropertyTypeInteger, 50, 0, 170),
@@ -230,7 +230,7 @@ public:
                            });
 
         mcp_server.AddTool("self.otto.jump",
-                           "跳跃。steps: 跳跃次数(1-100); speed: 跳跃速度(500-1500，数值越小越快)",
+                           "Nhảy. steps: Số lần nhảy (1-100); speed: Tốc độ nhảy (500-1500, số nhỏ hơn chạy nhanh hơn)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 1, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500)}),
                            [this](const PropertyList& properties) -> ReturnValue {
@@ -242,8 +242,8 @@ public:
 
         // 特殊动作
         mcp_server.AddTool("self.otto.swing",
-                           "左右摇摆。steps: 摇摆次数(1-100); speed: "
-                           "摇摆速度(500-1500，数值越小越快); amount: 摇摆幅度(0-170度)",
+                           "Lắc lư trái phải. steps: Số lần lắc (1-100); speed: "
+                           "Tốc độ lắc (500-1500, số nhỏ hơn chạy nhanh hơn); amount: Biên độ lắc (0-170 độ)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 3, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("amount", kPropertyTypeInteger, 30, 0, 170)}),
@@ -256,8 +256,8 @@ public:
                            });
 
         mcp_server.AddTool("self.otto.moonwalk",
-                           "太空步。steps: 太空步步数(1-100); speed: 速度(500-1500，数值越小越快); "
-                           "direction: 方向(1=左, -1=右); amount: 幅度(0-170度)",
+                           "Đi bộ kiểu vũ công. steps: Số bước (1-100); speed: Tốc độ (500-1500, số nhỏ hơn chạy nhanh hơn); "
+                           "direction: Hướng (1=trái, -1=phải); amount: Biên độ (0-170 độ)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 3, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("direction", kPropertyTypeInteger, 1, -1, 1),
@@ -272,8 +272,8 @@ public:
                            });
 
         mcp_server.AddTool("self.otto.bend",
-                           "弯曲身体。steps: 弯曲次数(1-100); speed: "
-                           "弯曲速度(500-1500，数值越小越快); direction: 弯曲方向(1=左, -1=右)",
+                           "Cúi người. steps: Số lần cúi (1-100); speed: "
+                           "Tốc độ cúi (500-1500, số nhỏ hơn chạy nhanh hơn); direction: Hướng cúi (1=trái, -1=phải)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 1, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
@@ -286,8 +286,8 @@ public:
                            });
 
         mcp_server.AddTool("self.otto.shake_leg",
-                           "摇腿。steps: 摇腿次数(1-100); speed: 摇腿速度(500-1500，数值越小越快); "
-                           "direction: 腿部选择(1=左腿, -1=右腿)",
+                           "Lắc chân. steps: Số lần lắc (1-100); speed: Tốc độ lắc (500-1500, số nhỏ hơn chạy nhanh hơn); "
+                           "direction: Chọn chân (1=chân trái, -1=chân phải)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 1, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
@@ -300,8 +300,8 @@ public:
                            });
 
         mcp_server.AddTool("self.otto.updown",
-                           "上下运动。steps: 上下运动次数(1-100); speed: "
-                           "运动速度(500-1500，数值越小越快); amount: 运动幅度(0-170度)",
+                           "Chuyển động lên xuống. steps: Số lần chuyển động (1-100); speed: "
+                           "Tốc độ chuyển động (500-1500, số nhỏ hơn chạy nhanh hơn); amount: Biên độ chuyển động (0-170 độ)",
                            PropertyList({Property("steps", kPropertyTypeInteger, 3, 1, 100),
                                          Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                                          Property("amount", kPropertyTypeInteger, 20, 0, 170)}),
@@ -317,8 +317,8 @@ public:
         if (has_hands_) {
             mcp_server.AddTool(
                 "self.otto.hands_up",
-                "举手。speed: 举手速度(500-1500，数值越小越快); direction: 手部选择(1=左手, "
-                "-1=右手, 0=双手)",
+                "Giơ tay. speed: Tốc độ giơ tay (500-1500, số nhỏ hơn chạy nhanh hơn); direction: Chọn tay (1=tay trái, "
+                "-1=tay phải, 0=cả hai tay)",
                 PropertyList({Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                               Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
                 [this](const PropertyList& properties) -> ReturnValue {
@@ -330,8 +330,8 @@ public:
 
             mcp_server.AddTool(
                 "self.otto.hands_down",
-                "放手。speed: 放手速度(500-1500，数值越小越快); direction: 手部选择(1=左手, "
-                "-1=右手, 0=双手)",
+                "Hạ tay. speed: Tốc độ hạ tay (500-1500, số nhỏ hơn chạy nhanh hơn); direction: Chọn tay (1=tay trái, "
+                "-1=tay phải, 0=cả hai tay)",
                 PropertyList({Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                               Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
                 [this](const PropertyList& properties) -> ReturnValue {
@@ -343,8 +343,8 @@ public:
 
             mcp_server.AddTool(
                 "self.otto.hand_wave",
-                "挥手。speed: 挥手速度(500-1500，数值越小越快); direction: 手部选择(1=左手, "
-                "-1=右手, 0=双手)",
+                "Vẫy tay. speed: Tốc độ vẫy tay (500-1500, số nhỏ hơn chạy nhanh hơn); direction: Chọn tay (1=tay trái, "
+                "-1=tay phải, 0=cả hai tay)",
                 PropertyList({Property("speed", kPropertyTypeInteger, 1000, 500, 1500),
                               Property("direction", kPropertyTypeInteger, 1, -1, 1)}),
                 [this](const PropertyList& properties) -> ReturnValue {
@@ -356,7 +356,7 @@ public:
         }
 
         // 系统工具
-        mcp_server.AddTool("self.otto.stop", "立即停止", PropertyList(),
+        mcp_server.AddTool("self.otto.stop", "Dừng ngay lập tức", PropertyList(),
                            [this](const PropertyList& properties) -> ReturnValue {
                                if (action_task_handle_ != nullptr) {
                                    vTaskDelete(action_task_handle_);
@@ -371,16 +371,16 @@ public:
 
         mcp_server.AddTool(
             "self.otto.set_trim",
-            "校准单个舵机位置。设置指定舵机的微调参数以调整Otto的初始站立姿态，设置将永久保存。"
-            "servo_type: 舵机类型(left_leg/right_leg/left_foot/right_foot/left_hand/right_hand); "
-            "trim_value: 微调值(-50到50度)",
+            "Cân chỉnh vị trí servo. Thiết lập tham số tinh chỉnh cho servo cụ thể để điều chỉnh tư thế đứng ban đầu của Otto, cài đặt sẽ được lưu vĩnh viễn. "
+            "servo_type: Loại servo (left_leg/right_leg/left_foot/right_foot/left_hand/right_hand); "
+            "trim_value: Giá trị tinh chỉnh (-50 đến 50 độ)",
             PropertyList({Property("servo_type", kPropertyTypeString, "left_leg"),
                           Property("trim_value", kPropertyTypeInteger, 0, -50, 50)}),
             [this](const PropertyList& properties) -> ReturnValue {
                 std::string servo_type = properties["servo_type"].value<std::string>();
                 int trim_value = properties["trim_value"].value<int>();
 
-                ESP_LOGI(TAG, "Set servo trim: %s = %d degrees", servo_type.c_str(), trim_value);
+                ESP_LOGI(TAG, "Đặt tinh chỉnh servo: %s = %d độ", servo_type.c_str(), trim_value);
 
                 // 获取当前所有微调值
                 Settings settings("otto_trims", true);
@@ -406,18 +406,18 @@ public:
                     settings.SetInt("right_foot", right_foot);
                 } else if (servo_type == "left_hand") {
                     if (!has_hands_) {
-                        return "错误：机器人没有配置手部舵机";
+                        return "Lỗi: Robot không được cấu hình servo tay";
                     }
                     left_hand = trim_value;
                     settings.SetInt("left_hand", left_hand);
                 } else if (servo_type == "right_hand") {
                     if (!has_hands_) {
-                        return "错误：机器人没有配置手部舵机";
+                        return "Lỗi: Robot không được cấu hình servo tay";
                     }
                     right_hand = trim_value;
                     settings.SetInt("right_hand", right_hand);
                 } else {
-                    return "错误：无效的舵机类型，请使用: left_leg, right_leg, left_foot, "
+                    return "Lỗi: Loại servo không hợp lệ, vui lòng sử dụng: left_leg, right_leg, left_foot, "
                            "right_foot, left_hand, right_hand";
                 }
 
@@ -425,11 +425,11 @@ public:
 
                 QueueAction(ACTION_JUMP, 1, 500, 0, 0);
 
-                return "舵机 " + servo_type + " 微调设置为 " + std::to_string(trim_value) +
-                       " 度，已永久保存";
+                return "Servo " + servo_type + " tinh chỉnh đặt thành " + std::to_string(trim_value) +
+                       " độ, đã lưu vĩnh viễn";
             });
 
-        mcp_server.AddTool("self.otto.get_trims", "获取当前的舵机微调设置", PropertyList(),
+        mcp_server.AddTool("self.otto.get_trims", "Lấy cài đặt tinh chỉnh servo hiện tại", PropertyList(),
                            [this](const PropertyList& properties) -> ReturnValue {
                                Settings settings("otto_trims", false);
 
@@ -448,16 +448,16 @@ public:
                                    ",\"left_hand\":" + std::to_string(left_hand) +
                                    ",\"right_hand\":" + std::to_string(right_hand) + "}";
 
-                               ESP_LOGI(TAG, "Get trim settings: %s", result.c_str());
+                               ESP_LOGI(TAG, "Lấy cài đặt tinh chỉnh: %s", result.c_str());
                                return result;
                            });
 
-        mcp_server.AddTool("self.otto.get_status", "获取机器人状态，返回 moving 或 idle",
+        mcp_server.AddTool("self.otto.get_status", "Lấy trạng thái robot, trả về moving hoặc idle",
                            PropertyList(), [this](const PropertyList& properties) -> ReturnValue {
                                return is_action_in_progress_ ? "moving" : "idle";
                            });
 
-        mcp_server.AddTool("self.battery.get_level", "获取机器人电池电量和充电状态", PropertyList(),
+        mcp_server.AddTool("self.battery.get_level", "Lấy mức pin và trạng thái sạc của robot", PropertyList(),
                            [](const PropertyList& properties) -> ReturnValue {
                                auto& board = Board::GetInstance();
                                int level = 0;
@@ -471,7 +471,7 @@ public:
                                return status;
                            });
 
-        ESP_LOGI(TAG, "MCP tools registration completed");
+        ESP_LOGI(TAG, "Hoàn thành đăng ký công cụ MCP");
     }
 
     ~OttoController() {
@@ -488,6 +488,6 @@ static OttoController* g_otto_controller = nullptr;
 void InitializeOttoController() {
     if (g_otto_controller == nullptr) {
         g_otto_controller = new OttoController();
-        ESP_LOGI(TAG, "Otto controller initialized and MCP tools registered");
+        ESP_LOGI(TAG, "Khởi tạo controller Otto và đăng ký công cụ MCP");
     }
 }
