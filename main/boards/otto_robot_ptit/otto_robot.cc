@@ -13,6 +13,7 @@
 #include "display/lcd_display.h"
 #include "lamp_controller.h"
 #include "led/single_led.h"
+#include "led/circular_strip.h"
 #include "mcp_server.h"
 #include "otto_emoji_display.h"
 #include "power_manager.h"
@@ -118,6 +119,12 @@ public:
         static PwmBacklight backlight(DISPLAY_BACKLIGHT_PIN, DISPLAY_BACKLIGHT_OUTPUT_INVERT);
         return &backlight;
     }
+
+    virtual Led* GetLed() override {
+        static CircularStrip led_strip(RGB_LED_DI_GPIO, RGB_LED_COUNT);
+        return &led_strip;
+    }
+
     virtual bool GetBatteryLevel(int& level, bool& charging, bool& discharging) override {
         charging = power_manager_->IsCharging();
         discharging = !charging;

@@ -3,16 +3,30 @@
 
 #include <driver/gpio.h>
 
-#define POWER_CHARGE_DETECT_PIN GPIO_NUM_21
+#define POWER_CHARGE_DETECT_PIN GPIO_NUM_14
 #define POWER_ADC_UNIT ADC_UNIT_2
 #define POWER_ADC_CHANNEL ADC_CHANNEL_3
 
-#define RIGHT_LEG_PIN GPIO_NUM_39
-#define RIGHT_FOOT_PIN GPIO_NUM_38
-#define LEFT_LEG_PIN GPIO_NUM_17
-#define LEFT_FOOT_PIN GPIO_NUM_18
-#define LEFT_HAND_PIN GPIO_NUM_8
-#define RIGHT_HAND_PIN GPIO_NUM_12
+#define AIN1 GPIO_NUM_13
+#define AIN2 GPIO_NUM_17
+// #define BIN1 GPIO_NUM_38
+// #define BIN2 GPIO_NUM_37
+#define BIN1 GPIO_NUM_1
+#define BIN2 GPIO_NUM_45
+#define PWMA GPIO_NUM_39
+#define PWMB GPIO_NUM_18
+#define STBY GPIO_NUM_42
+
+// PWM Configuration - Using timers 2,3 and channels 2,3 to avoid conflicts with backlight
+#define LEDC_TIMER_A LEDC_TIMER_2
+#define LEDC_TIMER_B LEDC_TIMER_3
+#define LEDC_MODE LEDC_LOW_SPEED_MODE
+#define LEDC_DUTY_RES LEDC_TIMER_13_BIT
+#define LEDC_FREQUENCY (5000) // 5kHz
+
+// PWM Channels - Using channels 2,3 to avoid conflicts with backlight
+#define LEDC_CHANNEL_A LEDC_CHANNEL_2
+#define LEDC_CHANNEL_B LEDC_CHANNEL_3
 
 #define AUDIO_INPUT_SAMPLE_RATE 16000
 #define AUDIO_OUTPUT_SAMPLE_RATE 24000
@@ -46,6 +60,11 @@
 #define DISPLAY_SPI_MODE 3
 
 #define BOOT_BUTTON_GPIO GPIO_NUM_0
+
+// RGB LED Strip Configuration - Circular 16-bit LEDs  
+#define RGB_LED_DO_GPIO GPIO_NUM_2   // Data Output (không dùng)
+#define RGB_LED_DI_GPIO GPIO_NUM_21  // Data Input - chân điều khiển LED
+#define RGB_LED_COUNT 16  // Number of LEDs in each circular strip
 
 // Custom MAC address for the device (format: 0xXX, 0xXX, 0xXX, 0xXX, 0xXX, 0xXX)
 // Uncomment and modify the line below to set a custom MAC address
