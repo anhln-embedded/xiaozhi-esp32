@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(if \\(Test-Path ~/.claude/skills\\) { Get-ChildItem -Path ~/.claude/skills -Recurse -Include \"SKILL.md\",\"skill.md\" | Select-Object Name, Directory, @{Name=\"Size\";Expression={$_.Length}} } else { \"no-skills-dir\" })",
+      "PowerShell($config = Get-Content -Raw -Path ~/.claude.json | ConvertFrom-Json; if \\($config.PSObject.Properties.Name -contains 'autoUpdates'\\) { \"autoUpdates=$\\($config.autoUpdates\\)\" } else { \"autoUpdates=not-set\" })",
+      "PowerShell($config = Get-Content -Raw -Path ~/.claude.json | ConvertFrom-Json; if \\($config.PSObject.Properties.Name -contains 'autoUpdatesChannel'\\) { \"channel=$\\($config.autoUpdatesChannel\\)\" } else { \"channel=not-set\" })",
+      "PowerShell($env:DISABLE_AUTOUPDATER; $env:DISABLE_UPDATES)",
+      "PowerShell($env:DISABLE_AUTOUPDATER)",
+      "PowerShell($env:DISABLE_UPDATES)",
+      "PowerShell(if \\(Test-Path ~/.claude/settings.json\\) { try { Get-Content -Raw ~/.claude/settings.json | ConvertFrom-Json | Out-Null; \"valid\" } catch { \"parse-error: $\\($_.Exception.Message\\)\" } } else { \"not-found\" })",
+      "PowerShell(if \\(Test-Path ~/.claude.json\\) { try { Get-Content -Raw ~/.claude.json | ConvertFrom-Json | Out-Null; \"valid\" } catch { \"parse-error: $\\($_.Exception.Message\\)\" } } else { \"not-found\" })",
+      "PowerShell($config = Get-Content -Raw ~/.claude.json | ConvertFrom-Json; $lastUsed = $config.skillUsage.'doctor'.lastUsedAt; $unixMs = [long]$lastUsed; $dt = [DateTimeOffset]::FromUnixTimeMilliseconds\\($unixMs\\).DateTime; $daysAgo = [math]::Round\\(\\(\\(Get-Date\\) - $dt\\).TotalDays, 1\\); \"lastUsed=$dt daysAgo=$daysAgo\")",
+      "PowerShell(npm config get prefix)",
+      "PowerShell(if \\(Test-Path \"$env:APPDATA\\\\npm\\\\node_modules\\\\@anthropic-ai\\\\claude-code\"\\) { \"npm-global-found\" } else { \"npm-global-not-found\" })",
+      "PowerShell(.\\\\build.ps1)"
+    ]
+  }
+}

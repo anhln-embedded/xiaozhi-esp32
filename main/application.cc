@@ -693,16 +693,8 @@ void Application::HandleToggleChatEvent() {
     }
 
     if (state == kDeviceStateIdle) {
-        ListeningMode mode = GetDefaultListeningMode();
-        if (!protocol_->IsAudioChannelOpened()) {
-            SetDeviceState(kDeviceStateConnecting);
-            // Schedule to let the state change be processed first (UI update)
-            Schedule([this, mode]() {
-                ContinueOpenAudioChannel(mode);
-            });
-            return;
-        }
-        SetListeningMode(mode);
+        // MCP-first: button sends MCP tool message directly (no voice ASR needed)
+        HandleButtonMcpClick();
     } else if (state == kDeviceStateSpeaking) {
         AbortSpeaking(kAbortReasonNone);
     } else if (state == kDeviceStateListening) {
@@ -725,6 +717,10 @@ void Application::ContinueOpenAudioChannel(ListeningMode mode) {
             return;
         }
     }
+
+    // ALWAYS send automatic request for tech news (button press or toggle chat)
+    // This ensures button press triggers the same behavior as voice wake-up
+    protocol_->SendWakeWordDetected("bản tin công nghệ tiếp");
 
     SetListeningMode(mode);
 }
@@ -846,15 +842,15 @@ void Application::ContinueWakeWordInvoke(const std::string& wake_word) {
     while (auto packet = audio_service_.PopWakeWordPacket()) {
         protocol_->SendAudio(std::move(packet));
     }
-    // Set the chat state to wake word detected
-    protocol_->SendWakeWordDetected(wake_word);
-    SetListeningMode(GetDefaultListeningMode());
 #else
     // Set flag to play popup sound after state changes to listening
     // (PlaySound here would be cleared by ResetDecoder in EnableVoiceProcessing)
     play_popup_on_listening_ = true;
-    SetListeningMode(GetDefaultListeningMode());
 #endif
+    // ALWAYS send automatic request for tech news (regardless of CONFIG_SEND_WAKE_WORD_DATA)
+    // This triggers server-side LLM to call get_next_news immediately
+    protocol_->SendWakeWordDetected("bản tin công nghệ tiếp");
+    SetListeningMode(GetDefaultListeningMode());
 }
 
 void Application::HandleStateChangedEvent() {
@@ -873,7 +869,7 @@ void Application::HandleStateChangedEvent() {
             display->ClearChatMessages();  // Clear messages first
             display->SetEmotion("neutral"); // Then set emotion (wechat mode checks child count)
             audio_service_.EnableVoiceProcessing(false);
-            audio_service_.EnableWakeWordDetection(true);
+            audio_service_.EnableWakeWordDetection(false);  // Disabled wake word detection
             break;
         case kDeviceStateConnecting:
             display->SetStatus(Lang::Strings::CONNECTING);
@@ -891,10 +887,10 @@ void Application::HandleStateChangedEvent() {
                 if (listening_mode_ == kListeningModeAutoStop) {
                     audio_service_.WaitForPlaybackQueueEmpty();
                 }
-                
+
                 // Send the start listening command
                 protocol_->SendStartListening(listening_mode_);
-                audio_service_.EnableVoiceProcessing(true);
+                // audio_service_.EnableVoiceProcessing(true);  // Disabled: mic input not needed (button-only mode)
             }
 
 #ifdef CONFIG_WAKE_WORD_DETECTION_IN_LISTENING
@@ -1116,6 +1112,32 @@ void Application::SetAecMode(AecMode mode) {
 
 void Application::PlaySound(const std::string_view& sound) {
     audio_service_.PlaySound(sound);
+}
+
+void Application::HandleButtonMcpClick() {
+    static const char* kMcpToolPayloads[] = {
+        "{\"tool\":\"mcp_news_tech\",\"args\":{\"limit\":10}}",
+        "{\"tool\":\"mcp_news_startup\",\"args\":{\"limit\":10}}",
+        "{\"tool\":\"mcp_news_science\",\"args\":{\"limit\":10}}"
+    };
+    static const char* kMcpToolLabels[] = {
+        "công nghệ",
+        "startup / khởi nghiệp",
+        "khoa học"
+    };
+    static const int kNumTools = sizeof(kMcpToolPayloads) / sizeof(kMcpToolPayloads[0]);
+
+    mcp_button_press_count_ = (mcp_button_press_count_ + 1) % kNumTools;
+    int idx = mcp_button_press_count_;
+
+    // Set state to connecting so server can respond with TTS audio
+    SetDeviceState(kDeviceStateConnecting);
+
+    // Send MCP tool call to server
+    ESP_LOGI(TAG, "MCP button [%d/3] → %s", idx + 1, kMcpToolLabels[idx]);
+    protocol_->SendMcpMessage(kMcpToolPayloads[idx]);
+
+    // Server will respond with tts:start → device speaks → tts:stop → device returns to idle
 }
 
 void Application::ResetProtocol() {
