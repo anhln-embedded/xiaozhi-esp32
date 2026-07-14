@@ -1130,10 +1130,22 @@ void Application::HandleButtonMcpClick() {
     mcp_button_press_count_ = (mcp_button_press_count_ + 1) % kNumTools;
     int idx = mcp_button_press_count_;
 
-    // Set state to connecting so server can respond with TTS audio
+    // Set state to connecting
     SetDeviceState(kDeviceStateConnecting);
 
-    // Send MCP tool call to server
+    // MUST open WebSocket / audio channel first — without it SendMcpMessage is a no-op
+    if (!protocol_->IsAudioChannelOpened()) {
+        if (!protocol_->OpenAudioChannel()) {
+            ESP_LOGE(TAG, "Failed to open audio channel for MCP message");
+            SetDeviceState(kDeviceStateIdle);
+            return;
+        }
+    }
+
+    // Use ManualStop so after TTS finishes, device returns to idle (not listening)
+    SetListeningMode(kListeningModeManualStop);
+
+    // WebSocket is now connected — send MCP tool call
     ESP_LOGI(TAG, "MCP button [%d/3] → %s", idx + 1, kMcpToolLabels[idx]);
     protocol_->SendMcpMessage(kMcpToolPayloads[idx]);
 
