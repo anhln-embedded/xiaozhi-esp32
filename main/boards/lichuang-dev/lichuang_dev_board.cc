@@ -107,22 +107,22 @@ private:
     void InitializeButtons() {
         boot_button_.OnClick([this]() {
             auto& app = Application::GetInstance();
-            // During startup (before connected), pressing BOOT button enters Wi-Fi config mode without reboot
             if (app.GetDeviceState() == kDeviceStateStarting) {
                 EnterWifiConfigMode();
                 return;
             }
-            app.ToggleChatState();
+            app.HandleButtonClick();  // → mcp_news_tech
         });
 
-#if CONFIG_USE_DEVICE_AEC
         boot_button_.OnDoubleClick([this]() {
             auto& app = Application::GetInstance();
-            if (app.GetDeviceState() == kDeviceStateIdle) {
-                app.SetAecMode(app.GetAecMode() == kAecOff ? kAecOnDeviceSide : kAecOff);
-            }
+            app.HandleButtonDoubleClick();  // → mcp_news_startup
         });
-#endif
+
+        boot_button_.OnMultipleClick([this]() {
+            auto& app = Application::GetInstance();
+            app.HandleButtonTripleClick();  // → mcp_news_science
+        }, 3);
     }
 
     void InitializeSt7789Display() {
