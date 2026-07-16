@@ -261,6 +261,7 @@ void OledDisplay::SetupUI_128x64() {
     lv_label_set_text(emotion_label_, FONT_AWESOME_MICROCHIP_AI);
     lv_obj_center(emotion_label_);
     lv_obj_set_style_pad_top(emotion_label_, 8, 0);
+    lv_obj_add_flag(emotion_label_, LV_OBJ_FLAG_HIDDEN);
 
     content_right_ = lv_obj_create(content_);
     lv_obj_set_size(content_right_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -327,6 +328,7 @@ void OledDisplay::SetupUI_128x32() {
     lv_obj_set_style_text_font(emotion_label_, large_icon_font, 0);
     lv_label_set_text(emotion_label_, FONT_AWESOME_MICROCHIP_AI);
     lv_obj_center(emotion_label_);
+    lv_obj_add_flag(emotion_label_, LV_OBJ_FLAG_HIDDEN);
 
     /* Right side */
     side_bar_ = lv_obj_create(container_);
@@ -385,6 +387,7 @@ void OledDisplay::SetupUI_128x32() {
 }
 
 void OledDisplay::SetEmotion(const char* emotion) {
+    return; // Hide icon
     const char* utf8 = font_awesome_get_utf8(emotion);
     DisplayLockGuard lock(this);
     if (emotion_label_ == nullptr) {

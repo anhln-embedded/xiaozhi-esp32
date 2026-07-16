@@ -648,20 +648,20 @@ void Application::HandleToggleChatEvent() {
 
 void Application::HandleButtonClick() {
     if (GetDeviceState() != kDeviceStateIdle) return;
-    SendMCPTool("mcp_news_tech");
+    SendMCPTool("mcp_news_tech", "Nhấn 1 lần\nĐang gửi đi...");
 }
 
 void Application::HandleButtonDoubleClick() {
     if (GetDeviceState() != kDeviceStateIdle) return;
-    SendMCPTool("mcp_news_startup");
+    SendMCPTool("mcp_news_startup", "Nhấn đúp 2 lần\nĐang gửi đi...");
 }
 
 void Application::HandleButtonTripleClick() {
     if (GetDeviceState() != kDeviceStateIdle) return;
-    SendMCPTool("mcp_news_science");
+    SendMCPTool("mcp_news_science", "Nhấn 3 lần\nĐang gửi đi...");
 }
 
-void Application::SendMCPTool(const std::string& tool_name) {
+void Application::SendMCPTool(const std::string& tool_name, const std::string& ui_message) {
     if (!protocol_) {
         InitializeProtocol();
         if (!protocol_) {
@@ -688,6 +688,13 @@ void Application::SendMCPTool(const std::string& tool_name) {
     protocol_->SendMcpMessage(payload);
 
     // Server will respond with tts:start → device speaks → tts:stop → device returns to idle
+    
+    if (!ui_message.empty()) {
+        Schedule([ui_message]() {
+            auto display = Board::GetInstance().GetDisplay();
+            display->SetChatMessage("system", ui_message.c_str());
+        });
+    }
 }
 
 

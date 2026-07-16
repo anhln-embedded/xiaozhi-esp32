@@ -29,30 +29,30 @@ void LcdDisplay::InitializeLcdThemes() {
 
     // light theme
     auto light_theme = new LvglTheme("light");
-    light_theme->set_background_color(lv_color_hex(0xFFFFFF));
+    light_theme->set_background_color(lv_color_hex(0xF2F2F7));
     light_theme->set_text_color(lv_color_hex(0x000000));
-    light_theme->set_chat_background_color(lv_color_hex(0xE0E0E0));
-    light_theme->set_user_bubble_color(lv_color_hex(0x00FF00));
-    light_theme->set_assistant_bubble_color(lv_color_hex(0xDDDDDD));
-    light_theme->set_system_bubble_color(lv_color_hex(0xFFFFFF));
-    light_theme->set_system_text_color(lv_color_hex(0x000000));
-    light_theme->set_border_color(lv_color_hex(0x000000));
-    light_theme->set_low_battery_color(lv_color_hex(0x000000));
+    light_theme->set_chat_background_color(lv_color_hex(0xE5E5EA));
+    light_theme->set_user_bubble_color(lv_color_hex(0x007AFF));
+    light_theme->set_assistant_bubble_color(lv_color_hex(0xFFFFFF));
+    light_theme->set_system_bubble_color(lv_color_hex(0xF2F2F7));
+    light_theme->set_system_text_color(lv_color_hex(0x8E8E93));
+    light_theme->set_border_color(lv_color_hex(0xD1D1D6));
+    light_theme->set_low_battery_color(lv_color_hex(0xFF3B30));
     light_theme->set_text_font(text_font);
     light_theme->set_icon_font(icon_font);
     light_theme->set_large_icon_font(large_icon_font);
 
     // dark theme
     auto dark_theme = new LvglTheme("dark");
-    dark_theme->set_background_color(lv_color_hex(0x000000));
+    dark_theme->set_background_color(lv_color_hex(0x121212));
     dark_theme->set_text_color(lv_color_hex(0xFFFFFF));
-    dark_theme->set_chat_background_color(lv_color_hex(0x1F1F1F));
-    dark_theme->set_user_bubble_color(lv_color_hex(0x00FF00));
-    dark_theme->set_assistant_bubble_color(lv_color_hex(0x222222));
-    dark_theme->set_system_bubble_color(lv_color_hex(0x000000));
-    dark_theme->set_system_text_color(lv_color_hex(0xFFFFFF));
-    dark_theme->set_border_color(lv_color_hex(0xFFFFFF));
-    dark_theme->set_low_battery_color(lv_color_hex(0xFF0000));
+    dark_theme->set_chat_background_color(lv_color_hex(0x1A1B26));
+    dark_theme->set_user_bubble_color(lv_color_hex(0x0A84FF));
+    dark_theme->set_assistant_bubble_color(lv_color_hex(0x2C2C2E));
+    dark_theme->set_system_bubble_color(lv_color_hex(0x1E1E1E));
+    dark_theme->set_system_text_color(lv_color_hex(0x98989D));
+    dark_theme->set_border_color(lv_color_hex(0x38383A));
+    dark_theme->set_low_battery_color(lv_color_hex(0xFF453A));
     dark_theme->set_text_font(text_font);
     dark_theme->set_icon_font(icon_font);
     dark_theme->set_large_icon_font(large_icon_font);
@@ -495,6 +495,7 @@ void LcdDisplay::SetupUI() {
     lv_obj_set_style_text_font(emoji_label_, large_icon_font, 0);
     lv_obj_set_style_text_color(emoji_label_, lvgl_theme->text_color(), 0);
     lv_label_set_text(emoji_label_, FONT_AWESOME_MICROCHIP_AI);
+    lv_obj_add_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
 }
 #if CONFIG_IDF_TARGET_ESP32P4
 #define  MAX_MESSAGES 40
@@ -566,10 +567,23 @@ void LcdDisplay::SetChatMessage(const char* role, const char* content) {
 
     // Create a message bubble
     lv_obj_t* msg_bubble = lv_obj_create(content_);
-    lv_obj_set_style_radius(msg_bubble, 8, 0);
+    lv_obj_set_style_radius(msg_bubble, 16, 0);
     lv_obj_set_scrollbar_mode(msg_bubble, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_border_width(msg_bubble, 0, 0);
-    lv_obj_set_style_pad_all(msg_bubble, lvgl_theme->spacing(4), 0);
+    lv_obj_set_style_pad_all(msg_bubble, 12, 0);
+
+    // Fade in animation
+    lv_obj_set_style_opa(msg_bubble, LV_OPA_TRANSP, 0);
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, msg_bubble);
+    lv_anim_set_values(&a, LV_OPA_TRANSP, LV_OPA_COVER);
+    lv_anim_set_time(&a, 300);
+    lv_anim_set_exec_cb(&a, [](void* var, int32_t v) {
+        lv_obj_set_style_opa((lv_obj_t*)var, v, 0);
+    });
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    lv_anim_start(&a);
 
     // Create the message text
     lv_obj_t* msg_text = lv_label_create(msg_bubble);
@@ -604,9 +618,9 @@ void LcdDisplay::SetChatMessage(const char* role, const char* content) {
     if (strcmp(role, "user") == 0) {
         // User messages are right-aligned with green background
         lv_obj_set_style_bg_color(msg_bubble, lvgl_theme->user_bubble_color(), 0);
-        lv_obj_set_style_bg_opa(msg_bubble, LV_OPA_70, 0);
+        lv_obj_set_style_bg_opa(msg_bubble, LV_OPA_COVER, 0);
         // Set text color for contrast
-        lv_obj_set_style_text_color(msg_text, lvgl_theme->text_color(), 0);
+        lv_obj_set_style_text_color(msg_text, lv_color_white(), 0);
         
         // Set custom attribute to mark bubble type
         lv_obj_set_user_data(msg_bubble, (void*)"user");
@@ -620,7 +634,7 @@ void LcdDisplay::SetChatMessage(const char* role, const char* content) {
     } else if (strcmp(role, "assistant") == 0) {
         // Assistant messages are left-aligned with white background
         lv_obj_set_style_bg_color(msg_bubble, lvgl_theme->assistant_bubble_color(), 0);
-        lv_obj_set_style_bg_opa(msg_bubble, LV_OPA_70, 0);
+        lv_obj_set_style_bg_opa(msg_bubble, LV_OPA_COVER, 0);
         // Set text color for contrast
         lv_obj_set_style_text_color(msg_text, lvgl_theme->text_color(), 0);
         
@@ -636,7 +650,7 @@ void LcdDisplay::SetChatMessage(const char* role, const char* content) {
     } else if (strcmp(role, "system") == 0) {
         // System messages are center-aligned with light gray background
         lv_obj_set_style_bg_color(msg_bubble, lvgl_theme->system_bubble_color(), 0);
-        lv_obj_set_style_bg_opa(msg_bubble, LV_OPA_70, 0);
+        lv_obj_set_style_bg_opa(msg_bubble, LV_OPA_TRANSP, 0);
         // Set text color for contrast
         lv_obj_set_style_text_color(msg_text, lvgl_theme->system_text_color(), 0);
         
@@ -795,7 +809,8 @@ void LcdDisplay::ClearChatMessages() {
     
     // Show the centered AI logo (emoji_label_) again
     if (emoji_label_ != nullptr) {
-        lv_obj_remove_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
+        // Do not unhide AI logo
+        // lv_obj_remove_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
     }
     
     ESP_LOGI(TAG, "Chat messages cleared");
@@ -841,6 +856,7 @@ void LcdDisplay::SetupUI() {
     lv_obj_set_style_text_font(emoji_label_, large_icon_font, 0);
     lv_obj_set_style_text_color(emoji_label_, lvgl_theme->text_color(), 0);
     lv_label_set_text(emoji_label_, FONT_AWESOME_MICROCHIP_AI);
+    lv_obj_add_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
 
     emoji_image_ = lv_img_create(emoji_box_);
     lv_obj_center(emoji_image_);
@@ -1072,6 +1088,7 @@ void LcdDisplay::ClearChatMessages() {
 #endif
 
 void LcdDisplay::SetEmotion(const char* emotion) {
+    return; // Hide icon
     if (!setup_ui_called_) {
         ESP_LOGW(TAG, "SetEmotion('%s') called before SetupUI() - emotion will not be displayed!", emotion);
     }

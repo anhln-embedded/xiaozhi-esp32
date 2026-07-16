@@ -126,7 +126,7 @@ private:
     void HandleActivationDoneEvent();
 
     // Shared helper for all button gestures
-    void SendMCPTool(const std::string& tool_name);
+    void SendMCPTool(const std::string& tool_name, const std::string& ui_message = "");
 
     // Activation and lifecycle methods
     void ActivationTask();
