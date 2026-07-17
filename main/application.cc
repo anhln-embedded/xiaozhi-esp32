@@ -647,6 +647,11 @@ void Application::HandleToggleChatEvent() {
 }
 
 void Application::HandleButtonClick() {
+    if (GetDeviceState() == kDeviceStateSpeaking) {
+        AbortSpeaking(kAbortReasonNone);
+        SetDeviceState(kDeviceStateIdle);
+        return;
+    }
     if (GetDeviceState() != kDeviceStateIdle) return;
     SendMCPTool("mcp_news_tech", "Nhấn 1 lần\nĐang gửi đi...");
 }

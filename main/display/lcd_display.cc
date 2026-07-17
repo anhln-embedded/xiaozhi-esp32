@@ -900,6 +900,13 @@ void LcdDisplay::SetupUI() {
     lv_obj_set_flex_flow(right_icons, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(right_icons, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
+    // PTIT Logo
+    lv_obj_t* ptit_logo_label = lv_label_create(right_icons);
+    lv_label_set_recolor(ptit_logo_label, true);
+    lv_label_set_text(ptit_logo_label, "#D32F2F PTIT#");
+    lv_obj_set_style_text_font(ptit_logo_label, text_font, 0);
+    lv_obj_set_style_margin_right(ptit_logo_label, lvgl_theme->spacing(2), 0);
+
     mute_label_ = lv_label_create(right_icons);
     lv_label_set_text(mute_label_, "");
     lv_obj_set_style_text_font(mute_label_, icon_font, 0);
