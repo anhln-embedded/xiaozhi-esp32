@@ -114,6 +114,16 @@ private:
             app.HandleButtonClick();  // → mcp_news_tech
         });
 
+        boot_button_.OnLongPress([this]() {
+            auto& app = Application::GetInstance();
+            app.StartListening();
+        });
+
+        boot_button_.OnPressUp([this]() {
+            auto& app = Application::GetInstance();
+            app.StopListening(); // StopListening already checks if state is kDeviceStateListening
+        });
+
         boot_button_.OnDoubleClick([this]() {
             auto& app = Application::GetInstance();
             app.HandleButtonDoubleClick();  // → mcp_news_startup
@@ -123,6 +133,7 @@ private:
             auto& app = Application::GetInstance();
             app.HandleButtonTripleClick();  // → mcp_news_science
         }, 3);
+
     }
 
     void InitializeSt7789Display() {
@@ -260,7 +271,7 @@ private:
     }
 
 public:
-    LichuangDevBoard() : boot_button_(BOOT_BUTTON_GPIO) {
+    LichuangDevBoard() : boot_button_(BOOT_BUTTON_GPIO, false, 1000) {
         InitializeI2c();
         InitializeSpi();
         InitializeSt7789Display();

@@ -27,6 +27,7 @@
 #define MAIN_EVENT_NETWORK_DISCONNECTED (1 << 5)
 #define MAIN_EVENT_TOGGLE_CHAT          (1 << 6)
 #define MAIN_EVENT_STATE_CHANGED        (1 << 7)
+#define MAIN_EVENT_SEND_AUDIO           (1 << 8)
 
 class Application {
 public:
@@ -88,6 +89,8 @@ public:
     void HandleButtonTripleClick();
     void PlaySound(const std::string_view& sound);
     AudioService& GetAudioService() { return audio_service_; }
+    void StartListening();
+    void StopListening();
 
     /**
      * Reset protocol resources (thread-safe)

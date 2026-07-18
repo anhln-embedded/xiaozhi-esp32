@@ -65,7 +65,7 @@ void Application::Initialize() {
 
     AudioServiceCallbacks callbacks;
     callbacks.on_send_queue_available = [this]() {
-        // Audio send queue is not used in news aggregator mode
+        xEventGroupSetBits(event_group_, MAIN_EVENT_SEND_AUDIO);
     };
     callbacks.on_wake_word_detected = [this](const std::string& wake_word) {
         // Wake word detection is disabled in news aggregator mode
@@ -164,7 +164,8 @@ void Application::Run() {
         MAIN_EVENT_NETWORK_DISCONNECTED |
         MAIN_EVENT_TOGGLE_CHAT |
         MAIN_EVENT_ACTIVATION_DONE |
-        MAIN_EVENT_STATE_CHANGED;
+        MAIN_EVENT_STATE_CHANGED |
+        MAIN_EVENT_SEND_AUDIO;
 
     while (true) {
         auto bits = xEventGroupWaitBits(event_group_, ALL_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
@@ -192,6 +193,13 @@ void Application::Run() {
 
         if (bits & MAIN_EVENT_TOGGLE_CHAT) {
             HandleToggleChatEvent();
+        }
+
+        if (bits & MAIN_EVENT_SEND_AUDIO) {
+            auto packet = audio_service_.PopPacketFromSendQueue();
+            if (packet && protocol_) {
+                protocol_->SendAudio(std::move(packet));
+            }
         }
 
         if (bits & MAIN_EVENT_SCHEDULE) {
@@ -654,6 +662,43 @@ void Application::HandleButtonClick() {
     }
     if (GetDeviceState() != kDeviceStateIdle) return;
     SendMCPTool("mcp_news_tech", "Nhấn 1 lần\nĐang gửi đi...");
+}
+
+void Application::StartListening() {
+    if (GetDeviceState() == kDeviceStateSpeaking) {
+        AbortSpeaking(kAbortReasonNone);
+        SetDeviceState(kDeviceStateIdle);
+    }
+    if (GetDeviceState() != kDeviceStateIdle) return;
+
+    if (!protocol_) {
+        InitializeProtocol();
+        if (!protocol_) {
+            ESP_LOGE(TAG, "Failed to initialize protocol");
+            return;
+        }
+    }
+
+    SetDeviceState(kDeviceStateConnecting);
+    if (!protocol_->IsAudioChannelOpened()) {
+        if (!protocol_->OpenAudioChannel()) {
+            ESP_LOGE(TAG, "Failed to open audio channel");
+            SetDeviceState(kDeviceStateIdle);
+            return;
+        }
+    }
+    
+    SetDeviceState(kDeviceStateListening);
+    protocol_->SendStartListening(kListeningModeManualStop);
+    audio_service_.EnableVoiceProcessing(true);
+}
+
+void Application::StopListening() {
+    if (GetDeviceState() == kDeviceStateListening) {
+        audio_service_.EnableVoiceProcessing(false);
+        protocol_->SendStopListening();
+        SetDeviceState(kDeviceStateIdle); // Will transition to computing state based on server response usually, or idle
+    }
 }
 
 void Application::HandleButtonDoubleClick() {
