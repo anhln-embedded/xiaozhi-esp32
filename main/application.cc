@@ -196,9 +196,15 @@ void Application::Run() {
         }
 
         if (bits & MAIN_EVENT_SEND_AUDIO) {
-            auto packet = audio_service_.PopPacketFromSendQueue();
-            if (packet && protocol_) {
-                protocol_->SendAudio(std::move(packet));
+            int sent_count = 0;
+            while (auto packet = audio_service_.PopPacketFromSendQueue()) {
+                if (protocol_) {
+                    protocol_->SendAudio(std::move(packet));
+                    sent_count++;
+                }
+            }
+            if (sent_count > 0) {
+                // Optional debug log: ESP_LOGD(TAG, "Sent %d audio packets", sent_count);
             }
         }
 
@@ -462,7 +468,8 @@ void Application::InitializeProtocol() {
     });
     
     protocol_->OnIncomingAudio([this](std::unique_ptr<AudioStreamPacket> packet) {
-        if (GetDeviceState() == kDeviceStateSpeaking) {
+        if (!aborted_) {
+            ESP_LOGD(TAG, "Incoming Audio Packet: size %d", packet->payload.size());
             audio_service_.PushPacketToDecodeQueue(std::move(packet));
         }
     });
@@ -490,16 +497,12 @@ void Application::InitializeProtocol() {
         if (strcmp(type->valuestring, "tts") == 0) {
             auto state = cJSON_GetObjectItem(root, "state");
             if (strcmp(state->valuestring, "start") == 0) {
-                Schedule([this]() {
-                    aborted_ = false;
-                    SetDeviceState(kDeviceStateSpeaking);
-                });
+                aborted_ = false;
+                SetDeviceState(kDeviceStateSpeaking);
             } else if (strcmp(state->valuestring, "stop") == 0) {
-                Schedule([this]() {
-                    if (GetDeviceState() == kDeviceStateSpeaking) {
-                        SetDeviceState(kDeviceStateIdle);
-                    }
-                });
+                if (GetDeviceState() == kDeviceStateSpeaking) {
+                    SetDeviceState(kDeviceStateIdle);
+                }
             } else if (strcmp(state->valuestring, "sentence_start") == 0) {
                 auto text = cJSON_GetObjectItem(root, "text");
                 if (cJSON_IsString(text)) {
@@ -771,7 +774,6 @@ void Application::HandleStateChangedEvent() {
             break;
         case kDeviceStateSpeaking:
             display->SetStatus(Lang::Strings::SPEAKING);
-            audio_service_.ResetDecoder();
             break;
         case kDeviceStateWifiConfiguring:
             break;

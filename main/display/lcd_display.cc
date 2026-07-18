@@ -1119,6 +1119,23 @@ void LcdDisplay::SetEmotion(const char* emotion) {
             lv_label_set_text(emoji_label_, utf8);
             lv_obj_add_flag(emoji_image_, LV_OBJ_FLAG_HIDDEN);
             lv_obj_remove_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
+
+            if (strcmp(emotion, "listening") == 0) {
+                lv_anim_t a;
+                lv_anim_init(&a);
+                lv_anim_set_var(&a, emoji_label_);
+                lv_anim_set_values(&a, LV_OPA_COVER, LV_OPA_30);
+                lv_anim_set_time(&a, 800);
+                lv_anim_set_playback_time(&a, 800);
+                lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+                lv_anim_set_exec_cb(&a, [](void* var, int32_t v) {
+                    lv_obj_set_style_text_opa((lv_obj_t*)var, v, 0);
+                });
+                lv_anim_start(&a);
+            } else {
+                lv_anim_del(emoji_label_, nullptr);
+                lv_obj_set_style_text_opa(emoji_label_, LV_OPA_COVER, 0);
+            }
         }
         return;
     }

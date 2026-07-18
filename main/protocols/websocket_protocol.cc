@@ -26,6 +26,7 @@ bool WebsocketProtocol::Start() {
 }
 
 bool WebsocketProtocol::SendAudio(std::unique_ptr<AudioStreamPacket> packet) {
+    ESP_LOGD(TAG, "Sending audio packet: %d bytes, ts: %llu", packet->payload.size(), packet->timestamp);
     if (websocket_ == nullptr || !websocket_->IsConnected()) {
         return false;
     }
